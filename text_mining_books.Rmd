@@ -1,0 +1,224 @@
+
+## Data mining example
+
+
+
+### Part 1
+
+#### I am using the dataset austen_books() from the package janeaustenr:
+
+
+```{r, message=FALSE}
+library(tidyverse)
+library(janeaustenr)
+library(tidytext)
+```
+
+```{r}
+# assign books to variable name
+
+pride_prejudice <- prideprejudice
+sense_sensibility <- sensesensibility
+```
+
+
+#### 1. I am going to look for the most common words in Pride & Prejudice and Sense & Sensibility.
+
+#### 1a. Pride and Prejudice
+
+```{r}
+pride_prejudice_text <- tibble(
+  phrase = pride_prejudice,
+  id     = 1:length(pride_prejudice)
+)
+head(pride_prejudice_text)
+```
+
+```{r}
+words_pride_and_prejudice <- 
+pride_prejudice_text %>%
+  unnest_tokens(word, phrase)
+
+words_pride_and_prejudice
+```
+
+```{r}
+# the most common words in pride and prejudice are below, arranged in descending order from the most common to the least common.
+words_pride_and_prejudice %>%
+  group_by(word) %>%
+  summarise(
+    count = n()
+  ) %>%
+   arrange(desc(count))
+```
+
+
+
+#### 1b. Sense and sensibility
+
+```{r}
+sense_sensibility_text <- tibble(
+  phrase = sense_sensibility,
+  id     = 1:length(sense_sensibility)
+)
+head(sense_sensibility_text)
+```
+
+```{r}
+words_sense_sensibility <- 
+sense_sensibility_text %>%
+  unnest_tokens(word, phrase)
+
+words_sense_sensibility
+```
+
+```{r}
+# the most common words in pride and prejudice are below, arranged in descending order from the most common to the least common.
+words_sense_sensibility %>%
+  group_by(word) %>%
+  summarise(
+    count = n()
+  ) %>%
+   arrange(desc(count))
+```
+
+
+
+
+#### 2. I am going to look for the most common words in Pride & Prejudice and Sense & Sensibility, not including stop words (stop words are very common words such as 'the', 'a', 'and' etc)
+
+#### 2a. Pride and prejudice
+
+```{r, message=FALSE}
+# I am doing an anti-join between the stop_words df found in the tidytext package and the book I am analysing. This will keep only the words which are not stop words.
+words_pride_and_prejudice %>%
+  anti_join(stop_words) %>%
+  count(word, sort = TRUE)
+```
+
+#### 2b. Sense and sensibility
+
+```{r, message=FALSE}
+words_sense_sensibility %>%
+  anti_join(stop_words) %>%
+  count(word, sort = TRUE)
+```
+
+
+
+#### 3. I am going to look for the most common sentiment words in Pride & Prejudice and Sense & Sensibility. Sentiment words are those which evoke feelings such as anger, hapiness etc. There are different sentiment analysis lexicons such as 'afinn', 'bing', 'loughran' and 'nrc'. I will not use 'nrc' for this purpose as it is quite large to download, so I will use one of the other ones mentioned above.
+
+#### 3a. Pride and prejudice
+
+```{r}
+# this shows a left join between the sentiment words from the 'bing' lexicon and the words found in the book. Notice not all words have a sentiment attached to them, these appear as NA.
+words_pride_and_prejudice %>%
+  left_join(get_sentiments("bing"))
+```
+
+```{r, message=FALSE}
+# now I want to keep just those words which have a sentiment, so I did an inner join.
+words_pride_and_prejudice %>%
+  inner_join(get_sentiments("bing"))
+```
+
+```{r, message=FALSE}
+# Now I want to sort them and find the most common sentiment words
+
+# creating data frame with all sentiment words
+sentiment_words_p_and_p <- 
+words_pride_and_prejudice %>%
+  inner_join(get_sentiments("bing"))
+```
+
+
+```{r}
+# filter for the most common positive words
+sentiment_words_p_and_p %>%
+  filter(sentiment == "positive") %>%
+  count(word, sort = TRUE)
+```
+
+```{r}
+# filter for the most common negative words
+sentiment_words_p_and_p %>%
+  filter(sentiment == "negative") %>%
+  count(word, sort = TRUE)
+```
+
+
+
+
+#### 3b. Sense and sensibility
+
+```{r, message=FALSE}
+# this shows a left join between the sentiment words from the 'bing' lexicon and the words found in the book. Notice not all words have a sentiment attached to them, these appear as NA.
+words_sense_sensibility %>%
+  left_join(get_sentiments("bing"))
+```
+
+```{r, message=FALSE}
+# now I want to keep just those words which have a sentiment, so I did an inner join.
+words_sense_sensibility %>%
+  inner_join(get_sentiments("bing"))
+```
+
+
+```{r, message=FALSE}
+# now I want to sort them and find the most common sentiment words
+
+# creating a data frame with all sentiment words
+sentiment_words_s_and_s <- 
+words_sense_sensibility %>%
+  inner_join(get_sentiments("bing"))
+```
+
+
+```{r}
+# filter for the most common positive words
+sentiment_words_s_and_s %>%
+  filter(sentiment == "positive") %>%
+  count(word, sort = TRUE)
+```
+
+
+```{r}
+# filter for the most common negative words
+sentiment_words_s_and_s %>%
+  filter(sentiment == "negative") %>%
+  count(word, sort = TRUE)
+```
+
+> It seems that in both books, the most common sentiment words are quite similar. 
+
+
+
+#### Based on the above analysis, I will create two plots which visualise the differences between the two books.
+
+
+```{r}
+sentiment_words_p_and_p %>%
+  ggplot() +
+  aes(x = sentiment) +
+  geom_bar()
+
+sentiment_words_s_and_s %>%
+  ggplot() +
+  aes(x = sentiment) +
+  geom_bar()
+```
+
+> The plots look very similar in terms of sentiments used in each book, with slightly more positive words used in Pride and Prejudice.
+
+
+
+
+
+
+
+
+
+
+
+
+
